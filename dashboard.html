@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحة البوستات والدردشة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to bottom right, #6a11cb, #2575fc); /* خلفية متدرجة */
+            background-size: cover;
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 600px;
+            background-color: rgba(255, 255, 255, 0.9); /* خلفية نصف شفافة للصناديق */
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .input-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .input-container input, .input-container textarea {
+            padding: 10px;
+            width: 80%;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-container button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .input-container button:hover {
+            background-color: #45a049;
+        }
+
+        .posts-display, .chat-display {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .posts-display div, .chat-display div {
+            background-color: #f0f0f0;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .welcome-message {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .alert {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- رسالة الترحيب -->
+    <div class="welcome-message">
+        مرحبًا بك في الموقع، welcome_teem_as3g!
+    </div>
+
+    <div class="container">
+        <h1>صفحة البوستات والدردشة</h1>
+        <div class="input-container">
+            <input type="text" id="userNameInput" placeholder="أدخل اسمك">
+            <div id="nameAlert" class="alert" style="display: none;">يرجى إدخال الاسم</div>
+        </div>
+
+        <div class="input-container">
+            <textarea id="postInput" placeholder="أدخل بوستك هنا..." rows="4"></textarea><br>
+            <button id="postButton">نشر البوست</button>
+            <div id="postAlert" class="alert" style="display: none;">يرجى إدخال البوست</div>
+        </div>
+
+        <h2>البوستات</h2>
+        <div class="posts-display" id="postsDisplay"></div>
+    </div>
+
+    <div class="container">
+        <div class="input-container">
+            <textarea id="chatInput" placeholder="أدخل رسالتك هنا..." rows="2"></textarea><br>
+            <button id="chatButton">إرسال الرسالة</button>
+            <div id="chatAlert" class="alert" style="display: none;">يرجى إدخال الرسالة</div>
+        </div>
+
+        <h2>الدردشة</h2>
+        <div class="chat-display" id="chatDisplay"></div>
+    </div>
+
+    <script>
+        const postsDisplay = document.getElementById('postsDisplay');
+        const chatDisplay = document.getElementById('chatDisplay');
+        const postButton = document.getElementById('postButton');
+        const chatButton = document.getElementById('chatButton');
+        const userNameInput = document.getElementById('userNameInput');
+        const postInput = document.getElementById('postInput');
+        const chatInput = document.getElementById('chatInput');
+
+        const nameAlert = document.getElementById('nameAlert');
+        const postAlert = document.getElementById('postAlert');
+        const chatAlert = document.getElementById('chatAlert');
+
+        // استرجاع البيانات من localStorage عند تحميل الصفحة
+        window.onload = function() {
+            displaySavedPosts();
+            displaySavedMessages();
+        };
+
+        // عرض البوستات المحفوظة
+        function displaySavedPosts() {
+            const savedPosts = JSON.parse(localStorage.getItem('posts')) || [];
+            postsDisplay.innerHTML = '';
+            savedPosts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.textContent = `${post.name}: ${post.content}`;
+                postsDisplay.appendChild(postElement);
+            });
+        }
+
+        // عرض الرسائل المحفوظة
+        function displaySavedMessages() {
+            const savedMessages = JSON.parse(localStorage.getItem('messages')) || [];
+            chatDisplay.innerHTML = '';
+            savedMessages.forEach(message => {
+                const messageElement = document.createElement('div');
+                messageElement.textContent = `${message.name}: ${message.content}`;
+                chatDisplay.appendChild(messageElement);
+            });
+        }
+
+        // إضافة بوست جديد
+        postButton.addEventListener('click', function() {
+            const userName = userNameInput.value.trim();
+            const postContent = postInput.value.trim();
+            
+            // التحقق من صحة البيانات
+            if (!userName) {
+                nameAlert.style.display = 'block';
+            } else {
+                nameAlert.style.display = 'none';
+            }
+
+            if (!postContent) {
+                postAlert.style.display = 'block';
+            } else {
+                postAlert.style.display = 'none';
+            }
+
+            if (userName && postContent) {
+                const postElement = document.createElement('div');
+                postElement.textContent = `${userName}: ${postContent}`;
+                postsDisplay.appendChild(postElement);
+
+                savePost(userName, postContent);
+                postInput.value = '';
+
+                // إظهار رسالة نجاح
+                alert('تم نشر البوست بنجاح!');
+            }
+        });
+
+        // إضافة رسالة جديدة
+        chatButton.addEventListener('click', function() {
+            const userName = userNameInput.value.trim();
+            const messageContent = chatInput.value.trim();
+            
+            // التحقق من صحة البيانات
+            if (!userName) {
+                nameAlert.style.display = 'block';
+            } else {
+                nameAlert.style.display = 'none';
+            }
+
+            if (!messageContent) {
+                chatAlert.style.display = 'block';
+            } else {
+                chatAlert.style.display = 'none';
+            }
+
+            if (userName && messageContent) {
+                const messageElement = document.createElement('div');
+                messageElement.textContent = `${userName}: ${messageContent}`;
+                chatDisplay.appendChild(messageElement);
+
+                saveMessage(userName, messageContent);
+                chatInput.value = '';
+
+                // إظهار رسالة نجاح
+                alert('تم إرسال الرسالة بنجاح!');
+            }
+        });
+
+        // حفظ البوست في localStorage
+        function savePost(name, content) {
+            const savedPosts = JSON.parse(localStorage.getItem('posts')) || [];
+            savedPosts.push({ name, content });
+            localStorage.setItem('posts', JSON.stringify(savedPosts));
+        }
+
+        // حفظ الرسالة في localStorage
+        function saveMessage(name, content) {
+            const savedMessages = JSON.parse(localStorage.getItem('messages')) || [];
+            savedMessages.push({ name, content });
+            localStorage.setItem('messages', JSON.stringify(savedMessages));
+        }
+    </script>
+</body>
+</html>

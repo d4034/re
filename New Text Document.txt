@@ -1,0 +1,51 @@
+<?php
+session_start(); // بدء جلسة للمستخدم
+
+$host = 'localhost'; // أو يمكن استخدام 127.0.0.1
+$db = 'your_database_name'; // أدخل اسم قاعدة البيانات
+$user = 'root'; // أدخل اسم المستخدم لقاعدة البيانات
+$pass = ''; // أدخل كلمة مرور قاعدة البيانات
+
+// الاتصال بقاعدة البيانات
+$mysqli = new mysqli($host, $user, $pass, $db);
+
+if ($mysqli->connect_error) {
+    die('Connection failed: ' . $mysqli->connect_error);
+}
+
+$username = $_POST['username'];
+$password = $_POST['password'];
+
+// التحقق من صحة اسم المستخدم وكلمة المرور
+$sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+$stmt = $mysqli->prepare($sql);
+$stmt->bind_param('ss', $username, $password);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$response = [];
+
+if ($result->num_rows > 0) {
+    // إذا كانت بيانات تسجيل الدخول صحيحة
+    $user = $result->fetch_assoc();
+
+    // تحديث حالة المستخدم إلى "online"
+    $update_sql = "UPDATE users SET status = 'online' WHERE id = ?";
+    $update_stmt = $mysqli->prepare($update_sql);
+    $update_stmt->bind_param('i', $user['id']);
+    $update_stmt->execute();
+
+    // تخزين معلومات الجلسة
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['username'] = $user['username'];
+
+    $response['success'] = true;
+} else {
+    $response['success'] = false;
+}
+
+echo json_encode($response);
+
+$stmt->close();
+$mysqli->close();
+?>

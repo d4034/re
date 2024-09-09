@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        #chat-box {
+            width: 500px;
+            height: 300px;
+            border: 1px solid #ccc;
+            overflow-y: scroll;
+            padding: 10px;
+        }
+        #message {
+            width: 400px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>نظام المحادثة الفورية</h1>
+
+<div id="chat-box"></div>
+
+<form id="chat-form">
+    <input type="text" id="username" name="username" placeholder="اسم المستخدم" required>
+    <br>
+    <input type="text" id="message" name="message" placeholder="اكتب رسالتك هنا" required>
+    <button type="submit">إرسال</button>
+</form>
+
+<script>
+$(document).ready(function() {
+    // دالة لجلب الرسائل وعرضها
+    function fetchMessages() {
+        $.ajax({
+            url: 'fetch_messages.php', // الصفحة التي تعرض الرسائل
+            method: 'GET',
+            success: function(response) {
+                var messages = JSON.parse(response);
+                var chatBox = $('#chat-box');
+                chatBox.empty(); // تنظيف صندوق الرسائل
+                $.each(messages, function(index, message) {
+                    chatBox.append('<p><strong>' + message.username + ':</strong> ' + message.message + '</p>');
+                });
+            }
+        });
+    }
+
+    // جلب الرسائل كل 5 ثوانٍ
+    setInterval(fetchMessages, 5000);
+    fetchMessages(); // جلب الرسائل عند فتح الصفحة
+
+    // إرسال الرسالة عند إرسال الفورم
+    $('#chat-form').on('submit', function(e) {
+        e.preventDefault();
+        var username = $('#username').val();
+        var message = $('#message').val();
+
+        $.ajax({
+            url: 'save_message.php', // الصفحة التي تحفظ الرسائل
+            method: 'POST',
+            data: { username: username, message: message },
+            success: function(response) {
+                $('#message').val(''); // تنظيف حقل الرسالة
+                fetchMessages(); // تحديث الرسائل
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>
